@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mijn Pink Gellac kleuren</title>
+<style>
+:root{--bg:#fff7fa;--card:#fff;--tx:#2a1620;--mu:#8a6575;--ac:#e0398a;--bd:#f0d3df;--ok:#2e9e5b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1015;--card:#271820;--tx:#f7e8ee;--mu:#b88ea0;--ac:#ff6fb0;--bd:#432835;--ok:#52c47e}}
+:root[data-theme="dark"]{--bg:#1b1015;--card:#271820;--tx:#f7e8ee;--mu:#b88ea0;--ac:#ff6fb0;--bd:#432835;--ok:#52c47e}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;padding:12px}
+main{max-width:640px;margin:0 auto}
+h1{font-size:20px;margin:4px 0 2px;color:var(--ac)}
+.sub{color:var(--mu);font-size:14px;margin-bottom:10px}
+input[type=text],textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.chip{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:6px 12px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 12px;margin-bottom:6px}
+.nr{min-width:38px;font-weight:700;color:var(--ac)}
+.nm{flex:1;min-width:0}
+.nm small{display:block;color:var(--mu)}
+label.t{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--mu);gap:2px;cursor:pointer}
+label.t input{width:24px;height:24px;accent-color:var(--ac)}
+.x{background:none;border:0;color:var(--mu);font-size:18px;cursor:pointer;padding:4px}
+details{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin:12px 0}
+summary{cursor:pointer;font-weight:600}
+.f{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.f input[type=text]{flex:1;min-width:120px}
+.btn{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer}
+.empty{text-align:center;color:var(--mu);padding:20px}
+[hidden]{display:none!important}a{color:var(--ac)}
+</style>
+</head>
+<body>
+<main id="login" hidden>
+<h1>Mijn Pink Gellac kleuren</h1>
+<p class="sub" id="lmsg">Log in om je lijst op al je apparaten te gebruiken.</p>
+<button class="btn" id="signin">Inloggen met Google</button>
+</main>
+<main id="app" hidden>
+<h1>Mijn Pink Gellac kleuren</h1>
+<div class="sub"><span id="who"></span> · <a href="#" id="out">Uitloggen</a></div>
+<div class="sub" id="stat"></div>
+<input type="text" id="q" placeholder="Zoek op nummer of naam…">
+<div class="chips" id="chips"></div>
+<div id="list"></div>
+
+<details>
+<summary>Kleur toevoegen</summary>
+<div class="f">
+<input type="text" id="nn" placeholder="Nr" inputmode="numeric" style="max-width:80px;flex:none">
+<input type="text" id="na" placeholder="Naam, bv. Passion Pink">
+<input type="text" id="ne" placeholder="Effecttype (optioneel), bv. Glitter" style="flex-basis:100%">
+<input type="text" id="no" placeholder="Omschrijving (optioneel)" style="flex-basis:100%">
+<button class="btn" id="add">Toevoegen</button>
+</div>
+</details>
+
+<details>
+<summary>Veel kleuren in één keer plakken</summary>
+<p class="sub">Eén kleur per regel, bv. “104 Passion Pink”. Zonder nummer mag ook.</p>
+<textarea id="bulk" rows="6"></textarea>
+<div class="f"><button class="btn" id="imp">Importeren</button></div>
+</details>
+</main>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,onSnapshot,setDoc} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+// === VUL HIER JE FIREBASE-GEGEVENS IN (Firebase console > Projectinstellingen > Je apps > Web-app) ===
+var firebaseConfig={
+  apiKey:"AIzaSyAONXn7TE1JJ2KVHGdmDrJgEMPa0URbUAc",
+  authDomain:"pinkgel-c88d6.firebaseapp.com",
+  projectId:"pinkgel-c88d6",
+  storageBucket:"pinkgel-c88d6.firebasestorage.app",
+  messagingSenderId:"790839435823",
+  appId:"1:790839435823:web:37d40107a0a24a40539cda"
+};
+// =====================================================================================================
+var KEY="pg-kleuren-v1";
+var DEF=[
+["104","Passion Pink",0],["122","Baby Pink",0],["125","Bronzy Pink",0],["146","Extreme Pink",0],
+["182","Dynamic Pink",0],["212","Bubblegum Pink",0],["282","Dusky Pink",0],
+["","Cat Eye Starfire Red",1],["018","Cat Eye Divine Quartz",1],["","Cat Eye Luminous Nebula",1],
+["","Cat Eye Sandy Citrine",1],["","Cat Eye Enchanted Emerald",1],["","Cat Eye Starlit Silver",1],
+["","Cat Eye Majestic Amethyst",1],["019","Cat Eye Black Onyx",1],["2004","Cat Eye Aquatic Jewel",1]
+].map(function(a){return{nr:a[0],naam:a[1],heb:false,cat:!!a[2]}});
+var NEW="033|Earthy Brown|Diepe aardebruine tint\n110|Mystic|Donkere, warme taupebruin\n139|Natural Taupe|Neutrale, natuurlijke taupetint\n150|Chestnut Brown|Warme kastanjebruine tint\n154|Nude Beige|Zachte, lichte beigebruine tint\n168|Elegant Taupe|Klassieke, koele taupe\n197|Golden Glam|Bruine tint met gouden shimmer\n202|Warm Marsala|Diepe roodbruine aardetint\n203|Chocolate Brown|Rijke chocoladebruine bestseller\n252|Beige Latte|Romige, lichte koffie-met-melktint\n256|Creamy Taupe|Zachte, romige taupetint\n257|Burnt Taupe|Warme, donkere taupetint\n259|Hazelnut Brown|Zachte hazelnootbruine tint\n283|Rosy Brown|Bruintint met een roze ondertoon\n315|Camel Gold|Warme camelkleur met gouden glans\n333|Oriental Spice|Warme, kruidige roodbruine tint\n394|Spicy Auburn|Warme roestbruine tint\n420|Sugared Cinnamon|Warme kaneelkleur\n421|Mocha Brown|Koffiebruine tint\n422|Espresso Bean|Zeer donkere espressobruine tint\n468|Truffle Silk|Zachte truffelbruine tint\n508|Hot Cocoa|Warme cacaobruine tint\n121|French Pink|Transparant zachtroze voor French Manicure\n161|Ibiza Pink|Felle neonroze tint\n166|Vintage Nude|Warme, tijdloze nudetint\n194|Ivory Blush|Zachte, lichte blush-tint\n195|Bronzed Nude|Warme, bronskleurige nude\n198|Heavenly Mauve|Zachte oudroze tint\n243|Diamond Pink|Roze tint met opvallende glitters\n254|Sparkling Nude|Nude met een fijne glitter\n306|Blissed Mauve|Gedempte oudroze/mauve tint\n339|Ballerina Pink|Licht pastelroze\n388|Rosewater Pink|Populaire, natuurlijk ogende roze tint\n398|Sakura Pink|Zacht bloesemroze\n399|Papaya Pink|Frisse perzikroze tint\n419|Marshmallow Nude|Melkachtige, lichte nudekleur\n423|Parisian Pink|Klassiek middenroze\n442|Aurora Pink|Heldere roze tint\n448|Blushed Tulle|Subtiele, transparante blush-tint\n449|Pink Petal|Zachtroze tint met fijne shimmer\n463|Sparkling Magenta|Felle magentaroze glitterlak\n465|Strawberry Soufflé|Zachte aardbeiroze tint\n497|Sunkissed Pink|Zonnige roze tint met glans\n505|Platinum Rose|Metallic roze tint\n108|Lady in Red|Heldere, klassieke rode tint\n109|Lipstick Red|Diepe, iconische lippenstiftrood\n111|Rustic Red|Warme, roestachtige roodtint\n112|Chique Red|Stijlvol, donkerder rood\n142|Coral Red|Frisse koraalrode tint\n173|Bordeaux|Klassiek diep bordeauxrood\n199|Luscious Red|Populaire dieprode bestseller\n308|Dramatic Red|Donker, intens rood\n332|Sangria Red|Warme wijnrode tint\n439|Berry Sheen|Diepe bessentint met glans\n494|Riviera Rouge|Heldere roodtint met glitter\n509|Cranberry Crush|Rijke cranberryrode tint\n101|Soft White|Dekkend helderwit voor French tips en nail art\n120|Beautiful Black|Dekkend diepzwart\n209|Sugar White|Zachte, melkwitte tint\n299|Coco White|Romige, zachtwitte bestseller\n378|Ginger Gold|Warme goudtint\n383|Icy White|Koel, helder wit\n433|Twinkling Champagne|Champagnekleur met shimmer\n156|Tropical|Heldere tropische groenblauwe tint\n301|Azure Blue|Heldere azuurblauwe tint\n338|Classic Blue|Tijdloos middenblauw\n372|Laguna Blue|Blauwe tint met glitter\n373|Royal Blue|Diep koningsblauw\n451|Something Blue|Zacht pastelblauw\n488|Melted Mint|Frisse mintgroene tint\n489|Hologlaze Blue|Blauwe tint met holografische glitter\n498|Ice Blue|Koele ijsblauwe tint\n279|Muted Plum|Gedempte pruimpaarse tint\n290|Sunblaze Orange|Felle zomerse oranje tint\n307|Maroon Purple|Diepe paarsrode tint\n327|Mandarin Orange|Frisse mandarijnoranje\n445|Butter Yellow|Zachte botergele pastelkleur\n469|Platinum Lavender|Lavendelpaars met glitter\n493|Lemon Drop|Zonnig citroengeel";
+var VKEY="pg-kleuren-seed",EKEY="pg-kleuren-seed-eff";
+var EFF="Shimmering Pearl|Parelmoer / Shimmer|Fijne parelmoergloed voor over nude- of pasteltinten\nMermaid Blue|Iridescent / Glans|Blauwe parelmoerglans die verandert met het licht\nTwilight Pink|Iridescent / Glans|Roze iriserende glanslaag\nLunar Lilac|Iridescent / Glans|Paars-lila lichtweerkaatsing\nCelestial Green|Iridescent / Glans|Groene parelmoer- en duochrome-glans\nCosmic Red|Iridescent / Glans|Warme rood-oranje glanslaag\nMoonlit Blue|Iridescent / Glans|Diepblauwe parelmoerschittering\nGlowing Gold|Shimmer / Goud|Subtiele gouden glanslaag\nSupreme Gold|Glitter / Goud|Intense gouden schittering\nGold Glitter|Glitter|Transparante laag met klassieke gouden glitters\nSilver Glitter|Glitter|Transparante laag met zilveren glitters\nHolographic Glitter|Holografisch|Regenboogachtige holografische glitters";
+var items=[],filter="alle",ref=null,unsub=null;
+function load(){var arr=null,seeded=null;
+try{var s=localStorage.getItem(KEY);if(s)arr=JSON.parse(s)}catch(e){}
+if(!arr)arr=DEF.map(function(x){return Object.assign({},x)});
+try{seeded=localStorage.getItem(VKEY)}catch(e){}
+if(seeded!=="2"){
+NEW.split("\n").forEach(function(l){var p=l.split("|");
+var ex=arr.filter(function(i){return i.nr===p[0]})[0];
+if(!ex)arr.push({nr:p[0],naam:p[1],oms:p[2]||"",heb:false,cat:false});else if(!ex.oms)ex.oms=p[2]||""});
+try{localStorage.setItem(VKEY,"2");localStorage.setItem(KEY,JSON.stringify(arr))}catch(e){}}
+var s3=null;try{s3=localStorage.getItem(EKEY)}catch(e){}
+if(s3!=="1"){EFF.split("\n").forEach(function(l){var p=l.split("|");
+var ex=arr.filter(function(i){return !i.nr&&i.naam.toLowerCase()===p[0].toLowerCase()})[0];
+if(!ex)arr.push({nr:"",naam:p[0],eff:p[1],oms:p[2],heb:false,cat:false});else{ex.eff=p[1];if(!ex.oms)ex.oms=p[2]}});
+try{localStorage.setItem(EKEY,"1");localStorage.setItem(KEY,JSON.stringify(arr))}catch(e){}}
+var s4=null;try{s4=localStorage.getItem("pg-kleuren-seed-cat")}catch(e){}
+if(s4!=="1"){[["018","Cat Eye Divine Quartz"],["019","Cat Eye Black Onyx"],["2004","Cat Eye Aquatic Jewel"],["","Cat Eye Starlit Silver"]].forEach(function(c){
+var ex=arr.filter(function(i){return i.naam.toLowerCase()===c[1].toLowerCase()})[0];
+if(!ex)arr.push({nr:c[0],naam:c[1],heb:false,cat:true});else{if(!ex.nr)ex.nr=c[0];ex.cat=true}});
+try{localStorage.setItem("pg-kleuren-seed-cat","1");localStorage.setItem(KEY,JSON.stringify(arr))}catch(e){}}
+return arr}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}
+if(ref)setDoc(ref,{items:items,updated:Date.now()}).catch(function(e){alert("Opslaan mislukt: "+e.code)})}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function sortItems(){items.sort(function(a,b){var x=a.nr===""?1e9:+a.nr,y=b.nr===""?1e9:+b.nr;return x-y||a.naam.localeCompare(b.naam)})}
+var F=[["alle","Alles"],["heb","Heb ik"],["mis","Heb ik niet"],["eff","Effecten"]];
+function render(){
+sortItems();
+var q=document.getElementById("q").value.toLowerCase().trim();
+var vis=items.map(function(it,i){return[it,i]}).filter(function(p){var it=p[0];
+if(filter==="heb"&&!it.heb)return false;if(filter==="mis"&&it.heb)return false;if(filter==="eff"&&!it.eff)return false;
+return !q||(it.nr+" "+it.naam+" "+(it.oms||"")+" "+(it.eff||"")).toLowerCase().indexOf(q)>-1});
+document.getElementById("stat").textContent=items.filter(function(i){return i.heb}).length+" van "+items.length+" kleuren in huis";
+document.getElementById("chips").innerHTML=F.map(function(f){return'<button class="chip'+(filter===f[0]?" on":"")+'" data-f="'+f[0]+'">'+f[1]+"</button>"}).join("");
+document.getElementById("list").innerHTML=vis.length?vis.map(function(p){var it=p[0],i=p[1];
+return'<div class="row"><div class="nr">'+esc(it.nr||"–")+'</div><div class="nm">'+esc(it.naam)+((it.oms||it.eff)?'<small>'+(it.eff?esc(it.eff)+(it.oms?' · ':''):'')+esc(it.oms||'')+'</small>':'')+'</div>'+
+'<label class="t"><input type="checkbox" data-i="'+i+'" data-k="heb"'+(it.heb?" checked":"")+'>Heb ik</label>'+
+'<button class="x" data-d="'+i+'" aria-label="Verwijder">✕</button></div>'}).join(""):'<div class="empty">Niets gevonden.</div>';
+}
+document.getElementById("chips").onclick=function(e){var f=e.target.getAttribute("data-f");if(f){filter=f;render()}};
+document.getElementById("q").oninput=render;
+document.getElementById("list").onchange=function(e){var t=e.target,i=t.getAttribute("data-i");if(i!==null){items[i][t.getAttribute("data-k")]=t.checked;save();render()}};
+document.getElementById("list").onclick=function(e){var d=e.target.getAttribute("data-d");if(d!==null&&confirm("Deze kleur verwijderen?")){items.splice(+d,1);save();render()}};
+function has(nr,naam){return items.some(function(i){return nr!==""?i.nr===nr:i.naam.toLowerCase()===naam.toLowerCase()})}
+document.getElementById("add").onclick=function(){
+var nr=document.getElementById("nn").value.replace(/\D/g,""),na=document.getElementById("na").value.trim(),om=document.getElementById("no").value.trim(),ef=document.getElementById("ne").value.trim();
+if(!na)return;
+if(has(nr,na)){alert("Deze kleur staat er al in.");return}
+items.push({nr:nr,naam:na,oms:om,eff:ef,heb:true,cat:false});
+["nn","na","no","ne"].forEach(function(id){document.getElementById(id).value=""});save();render()};
+document.getElementById("imp").onclick=function(){
+var ta=document.getElementById("bulk");
+ta.value.split(/\r?\n/).forEach(function(l){l=l.trim();if(!l)return;
+var m=l.match(/^(\d+)[\s.:\-–]+(.+)$/),nr=m?m[1]:"",na=m?m[2].trim():l;
+if(!has(nr,na))items.push({nr:nr,naam:na,heb:false,cat:/cat\s*eye/i.test(na)})});
+ta.value="";save();render()};
+function show(id){["login","app"].forEach(function(x){document.getElementById(x).hidden=x!==id})}
+if(firebaseConfig.apiKey.indexOf("JOUW")===0){
+show("login");document.getElementById("signin").hidden=true;
+document.getElementById("lmsg").textContent="Vul eerst je Firebase-gegevens in bovenaan het bestand (firebaseConfig)."}
+else{
+var fapp=initializeApp(firebaseConfig),auth=getAuth(fapp);
+var db=initializeFirestore(fapp,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+document.getElementById("signin").onclick=function(){signInWithPopup(auth,new GoogleAuthProvider()).catch(function(e){document.getElementById("lmsg").textContent="Inloggen mislukt: "+e.code})};
+document.getElementById("out").onclick=function(e){e.preventDefault();signOut(auth)};
+onAuthStateChanged(auth,function(u){
+if(unsub){unsub();unsub=null}
+if(!u){ref=null;items=[];show("login");return}
+document.getElementById("who").textContent=u.displayName||u.email||"";
+ref=doc(db,"users",u.uid,"data","kleuren");show("app");
+unsub=onSnapshot(ref,function(snap){
+if(snap.exists()){if(snap.metadata.hasPendingWrites)return;items=snap.data().items||[];render()}
+else{if(snap.metadata.fromCache)return;items=load();save();render()}
+},function(e){document.getElementById("stat").textContent="Fout met database: "+e.code})})}
+</script>
+</body>
+</html>
