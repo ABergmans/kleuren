@@ -229,7 +229,7 @@ if(unsub){unsub();unsub=null}
 if(!u){ref=null;items=[];show("login");return}
 document.getElementById("who").textContent=u.displayName||u.email||"";
 ref=doc(db,"users",u.uid,"data","kleuren");show("app");
-unsub=onSnapshot(ref,function(snap){
+unsub=onSnapshot(ref,{includeMetadataChanges:true},function(snap){
 if(snap.exists()){if(snap.metadata.hasPendingWrites)return;var d=snap.data();items=d.items||[];
 if((d.ver||0)<VER&&!snap.metadata.fromCache){migrate(items);save()}render()}
 else{if(snap.metadata.fromCache)return;items=load();migrate(items);save();render()}
