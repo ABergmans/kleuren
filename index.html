@@ -178,7 +178,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;
 function sortItems(){items.sort(function(a,b){var ca=(a.ct||"Kleurlak")==="Kleurlak"?0:1,cb=(b.ct||"Kleurlak")==="Kleurlak"?0:1;if(ca!==cb)return ca-cb;
 if(ca){return(a.sub||"").localeCompare(b.sub||"")||a.naam.localeCompare(b.naam)}
 var x=a.nr?+a.nr:1e9,y=b.nr?+b.nr:1e9;return x-y||a.naam.localeCompare(b.naam)})}
-var F=[["alle","✨ Alles"],["heb","💖 Heb ik"],["mis","🛍️ Heb ik niet"],["eff","🌈 Effecten"],["kl","💅 Kleurlak"],["acc","🧰 Accessoires"],["nl","⛔ Niet meer leverbaar"]];
+var F=[["alle","✨ Alles"],["heb","💖 Heb ik"],["mis","🛍️ Heb ik niet"],["nl","⛔ Niet leverbaar"],["eff","🌈 Effecten"],["kl","💅 Kleurlak"],["acc","🧰 Accessoires"]];
 var EM=[["lipstick","💄"],["bordeaux","🍷"],["sangria","🍷"],["marsala","🍷"],["champagne","🥂"],["chocolate","🍫"],["cinnamon","🍂"],["spic","🍂"],["coral","🪸"],["ice ","🧊"],["tropical","🌴"],["ballerina","🩰"],["marshmallow","🍡"],["espresso","☕"],["latte","☕"],["hazelnut","🌰"],["chestnut","🌰"],["cat eye","🐱"],["holograph","🌈"],["glitter","✨"],["sparkl","✨"],["iridescent","🔮"],["mystic","🔮"],["pearl","🦪"],["rouge","❤️"],["pink","🌸"],["blush","🌸"],["rose","🌹"],["red","❤️"],["berry","🍓"],["blue","💙"],["mint","💚"],["green","💚"],["emerald","💚"],["gold","🌟"],["silver","🪩"],["white","🤍"],["black","🖤"],["onyx","🖤"],["brown","🤎"],["taupe","🤎"],["cocoa","🤎"],["mocha","🤎"],["truffle","🤎"],["camel","🤎"],["nude","🤍"],["beige","🤍"],["purple","💜"],["plum","💜"],["lilac","💜"],["mauve","💜"],["lavender","💜"],["amethyst","💜"],["orange","🧡"],["yellow","💛"],["lemon","🍋"]];
 function emo(it){if(it.ct==="Accessoires")return /lamp/i.test(it.naam)?"💡":/creme|care|olie|riem|remover|cleaner/i.test(it.naam)?"🧴":"🧰";var t=(it.naam+" "+(it.eff||"")).toLowerCase()+" ";for(var i=0;i<EM.length;i++)if(t.indexOf(EM[i][0])>-1)return EM[i][1];return"💅"}
 function kv(l,v){return'<div class="kv"><span>'+l+'</span><b>'+v+'</b></div>'}
@@ -204,7 +204,7 @@ var vis=items.map(function(it,i){return[it,i]}).filter(function(p){var it=p[0];
 if(filter==="heb"&&!it.heb)return false;if(filter==="mis"&&it.heb)return false;if(filter==="eff"&&!it.eff)return false;if(filter==="nl"&&!it.nl)return false;
 var isK=(it.ct||"Kleurlak")==="Kleurlak";if(filter==="kl"&&!isK)return false;if(filter==="acc"&&isK)return false;
 return !q||[it.nr,it.naam,it.oms,it.eff,it.sub,it.hk,it.dk,it.fx,it.fam,it.inf].join(" ").toLowerCase().indexOf(q)>-1});
-document.getElementById("stat").textContent="💖 "+items.filter(function(i){return i.heb}).length+" van "+items.length+" in huis";
+document.getElementById("stat").textContent="💖 "+vis.filter(function(p){return p[0].heb}).length+" van "+vis.length+" in huis";
 document.getElementById("chips").innerHTML=F.map(function(f){return'<button class="chip'+(filter===f[0]?" on":"")+'" data-f="'+f[0]+'">'+f[1]+"</button>"}).join("");
 var last="",out=[];
 vis.forEach(function(p){var it=p[0],k=(it.ct||"Kleurlak")==="Kleurlak"?"💅 Kleurlakken":"🧰 "+(it.sub||"Accessoires");
