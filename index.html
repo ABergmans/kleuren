@@ -96,13 +96,6 @@ a{color:var(--ac)}
 <button class="btn" id="add">➕ Toevoegen</button>
 </div>
 </details>
-
-<details>
-<summary>📋 Veel kleuren in één keer plakken</summary>
-<p class="sub">Eén kleur per regel, bv. “104 Passion Pink”. Zonder nummer mag ook.</p>
-<textarea id="bulk" rows="6"></textarea>
-<div class="f"><button class="btn" id="imp">📥 Importeren</button></div>
-</details>
 </main>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -243,12 +236,6 @@ if(!na)return;
 if(has(nr,na)){alert("Deze kleur staat er al in.");return}
 items.push({nr:nr,naam:na,oms:om,eff:ef,ct:ct,heb:true,cat:false});
 ["nn","na","no","ne"].forEach(function(id){document.getElementById(id).value=""});save();render()};
-document.getElementById("imp").onclick=function(){
-var ta=document.getElementById("bulk");
-ta.value.split(/\r?\n/).forEach(function(l){l=l.trim();if(!l)return;
-var m=l.match(/^(\d+)[\s.:\-–]+(.+)$/),nr=m?m[1]:"",na=m?m[2].trim():l;
-if(!has(nr,na))items.push({nr:nr,naam:na,heb:false,cat:/cat\s*eye/i.test(na)})});
-ta.value="";save();render()};
 function show(id){["login","app"].forEach(function(x){document.getElementById(x).hidden=x!==id})}
 if(firebaseConfig.apiKey.indexOf("JOUW")===0){
 show("login");document.getElementById("signin").hidden=true;
