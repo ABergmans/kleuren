@@ -58,9 +58,17 @@ a{color:var(--ac)}
 .sl select,.sel{display:block;width:100%;min-height:44px;margin-top:4px;font:inherit;font-size:16px;padding:0 10px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx)}
 .lnk{display:flex;align-items:center;min-height:44px}
 .del{margin-top:6px;min-height:44px;background:none;border:1px solid var(--bd);color:var(--mu);border-radius:12px;font:inherit;padding:0 14px;cursor:pointer}
+
+/* Ronde afbeelding linksboven + zoom */
+.avwrap{max-width:640px;margin:0 auto;padding-top:8px}
+#avatar{display:block;width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--bd);background:var(--card);cursor:zoom-in}
+#zoomov{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0);touch-action:none;transition:background .3s ease}
+#zoomov.on{background:rgba(0,0,0,.92)}
+#zoomov img{position:fixed;object-fit:contain;cursor:zoom-out;transition:top .3s ease,left .3s ease,width .3s ease,height .3s ease,border-radius .3s ease,opacity .3s ease}
 </style>
 </head>
 <body>
+<div class="avwrap"><img id="avatar" src="https://i.imgur.com/YPM7wa3.png" alt="Afbeelding (tik om te vergroten)" role="button" tabindex="0"></div>
 <main id="login" hidden>
 <div class="big">💅</div>
 <h1>Maroesja’s PinkGellac</h1>
@@ -249,6 +257,37 @@ absorbing=true;
 getDoc(oldRef()).then(function(o){items=o.exists()?(o.data().items||[]):load()}).catch(function(){items=load()}).then(function(){
 migrate(items);merged=[uid];docVer=VER;absorbing=false;save();render()})}
 },function(e){document.getElementById("stat").textContent="Fout met database: "+e.code})})}
+</script>
+<script>
+(function(){
+var th=document.getElementById("avatar"),ov=null,im=null,busy=false;
+function full(){im.style.top="0";im.style.left="0";im.style.width="100vw";im.style.height="100vh";im.style.borderRadius="0"}
+function open(){
+if(ov||busy)return;busy=true;
+var r=th.getBoundingClientRect();
+ov=document.createElement("div");ov.id="zoomov";
+im=document.createElement("img");im.src=th.src;im.alt="";
+im.style.top=r.top+"px";im.style.left=r.left+"px";im.style.width=r.width+"px";im.style.height=r.height+"px";im.style.borderRadius="50%";
+ov.appendChild(im);document.body.appendChild(ov);
+th.style.visibility="hidden";
+void ov.offsetWidth;
+ov.classList.add("on");full();
+setTimeout(function(){busy=false},300);
+ov.onclick=close;
+ov.addEventListener("touchmove",function(e){e.preventDefault()},{passive:false});
+}
+function close(){
+if(!ov||busy)return;busy=true;
+var r=th.getBoundingClientRect(),vis=r.bottom>0&&r.top<window.innerHeight;
+ov.classList.remove("on");
+if(vis){im.style.top=r.top+"px";im.style.left=r.left+"px";im.style.width=r.width+"px";im.style.height=r.height+"px";im.style.borderRadius="50%"}
+else{im.style.opacity="0"}
+setTimeout(function(){if(ov){ov.remove()}ov=im=null;th.style.visibility="";busy=false},300);
+}
+th.addEventListener("click",open);
+th.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}});
+document.addEventListener("keydown",function(e){if(e.key==="Escape")close()});
+})();
 </script>
 </body>
 </html>
